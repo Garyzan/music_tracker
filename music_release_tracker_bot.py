@@ -41,7 +41,11 @@ async def command_start_handler(message: Message) -> None:
     if not message.from_user.id in ALLOWLIST:
         log(logging.INFO, f"Message from blocked user {message.from_user.id}")
         return
-    await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
+    await message.answer(f"Hello, {message.from_user.full_name}!\n" +
+                          "This bot tracks music releases using the MusicBrainz database.\n" + 
+                          "Add new artists using /add or /track, or remove them with /remove or /delete.\n" +
+                          "Use /refresh to check for new releases since the last refresh.\n" +
+                          "DEBUG ONLY: Use /setdate [artist_id] [YYYY-MM-DD] to manually edit the last refresh date.")
 
 @dp.message(Command("add"))
 @dp.message(Command("track"))
@@ -82,6 +86,8 @@ async def refresh(message: Message) -> None:
             resp_j = resp.json()
             if resp_j['count'] == 0:
                 await message.answer(f"No new releases for {artist_id}")
+            else:
+                await message.answer(f"{resp_j['count']} new release(s) for {artist_id}")
 
     await message.answer(f"Done")
 
@@ -100,6 +106,14 @@ async def remove_tracking(message: Message) -> None:
     file_handler.remove_artists(message.from_user.id, artist_ids)
     await message.answer(f"No longer tracking {', '.join(artist_ids)}!")
 
+@dp.message(Command("setdate"))
+async def setdate(message: Message) -> None:
+    if not message.from_user.id in ALLOWLIST:
+        log(logging.INFO, f"Message from blocked user {message.from_user.id}")
+        return
+    _, artist, newdate = message.text.split(" ")
+    file_handler.update_last_date(message.from_user.id, artist, newdate)
+    await message.answer(f"Done")
 
 async def main() -> None:
     # Initialize Bot instance with default bot properties which will be passed to all API calls

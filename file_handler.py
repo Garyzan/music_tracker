@@ -47,13 +47,15 @@ def get_last_date(uid: str, artist_id: str) -> str | None:
         with open(filepath, 'r') as f:
             tracking: dict = json.load(f)
         return tracking[artist_id]
-    
-def update_last_date(uid: str, artist_id: str) -> None:
+
+def update_last_date(uid: str, artist_id: str, new_date: str = None) -> None:
+    if new_date == None:
+        new_date = date.today().strftime('%Y-%m-%d')
     filepath = f"tracks/{uid}.json"
     if os.path.isfile(filepath):
         with open(filepath, 'r') as f:
             tracking: dict = json.load(f)
         if artist_id in tracking.keys():
             with open(filepath, 'w') as f:
-                tracking[artist_id] = date.today().strftime('%Y-%m-%d')
+                tracking[artist_id] = new_date
                 json.dump(tracking, f)
