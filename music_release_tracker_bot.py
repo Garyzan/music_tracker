@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import os
 import sys
@@ -72,8 +71,6 @@ async def refresh(message: Message) -> None:
     
     await message.answer(f"Added to queue...")
     
-    with open(filepath, 'r') as f:
-        tracking: dict = json.load(f)
     for artist_id in file_handler.get_artists(message.from_user.id):
         last_date = file_handler.get_last_date(message.from_user.id, artist_id)
         resp = mbdb_interface.get_releases_since(artist_id, last_date)
