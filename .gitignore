@@ -1,5 +1,11 @@
-.env
-tracks
+# software stuff
 .vscode
 __pycache__
+
+# private files
+.env
+tracks
+
+# user lists
 allowlist
+adminlist

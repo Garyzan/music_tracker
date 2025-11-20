@@ -9,7 +9,7 @@ import file_handler
 from dotenv import load_dotenv
 from logging import log
 
-from aiogram import Bot, Dispatcher, html
+from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
@@ -18,7 +18,7 @@ from aiogram.types import Message
 ## Environment
 
 load_dotenv()
-TOKEN : str = os.getenv("TOKEN", "")
+TOKEN : str = os.getenv("TOKEN")
 
 ALLOWLIST = []
 try:
@@ -26,6 +26,14 @@ try:
         ALLOWLIST = [int(user_id) for user_id in f.readlines()]
 except FileNotFoundError:
     log(logging.ERROR, "Allowlist file not found. Exiting....")
+    exit()
+  
+ADMINLIST = []
+try:
+    with open("adminlist", "r") as f:
+        ADMINLIST = [int(user_id) for user_id in f.readlines()]
+except FileNotFoundError:
+    log(logging.ERROR, "Adminlist file not found. Exiting....")
     exit()
 
 dp = Dispatcher()
@@ -105,6 +113,15 @@ async def remove_tracking(message: Message) -> None:
     artist_ids = message.text.split(" ")[1:]
     file_handler.remove_artists(message.from_user.id, artist_ids)
     await message.answer(f"No longer tracking {', '.join(artist_ids)}!")
+
+@dp.message(Command("setdate"))
+async def setdate(message: Message) -> None:
+    if not message.from_user.id in ADMINLIST:
+        log(logging.INFO, f"Nonadmin {message.from_user.id} tried to access protected command 'setdate'")
+        return
+    _, artist, newdate = message.text.split(" ")
+    file_handler.update_last_date(message.from_user.id, artist, newdate)
+    await message.answer(f"Done")
 
 @dp.message(Command("setdate"))
 async def setdate(message: Message) -> None:
