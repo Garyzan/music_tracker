@@ -2,13 +2,13 @@ import asyncio
 import json
 import logging
 import os
-import requests
 import sys
 
-from datetime import date, timedelta
+import mbdb_interface
+import file_handler
+
 from dotenv import load_dotenv
 from logging import log
-from ratelimit import limits, sleep_and_retry
 
 from aiogram import Bot, Dispatcher, html
 from aiogram.client.default import DefaultBotProperties
@@ -56,7 +56,7 @@ async def add_tracking(message: Message) -> None:
         return
     
     artist_ids = message.text.split(" ")[1:]
-    add_to_trackfile(message.from_user.id, artist_ids)
+    file_handler.add_artists(message.from_user.id, artist_ids)
     await message.answer(f"Tracking {', '.join(artist_ids)}!")
 
 @dp.message(Command("refresh"))
@@ -74,10 +74,17 @@ async def refresh(message: Message) -> None:
     
     with open(filepath, 'r') as f:
         tracking: dict = json.load(f)
-    for artist_id, last_date in tracking.items():
-        resp = get_releases_since(artist_id, last_date)
-        if resp != False:
-            tracking[artist_id] = date.today().strftime('%Y-%m-%d')
+    for artist_id in file_handler.get_artists(message.from_user.id):
+        last_date = file_handler.get_last_date(message.from_user.id, artist_id)
+        resp = mbdb_interface.get_releases_since(artist_id, last_date)
+        if resp.status_code != 200:
+            log(logging.ERROR, f"Error returned: {resp.status_code}: {resp.text}")
+            await(message.answer(f"Could not retrieve releases for MBID {artist_id} at this time"))
+        else:
+            file_handler.update_last_date(message.from_user.id, artist_id)
+            resp_j = resp.json()
+            if resp_j.count == 0:
+                await message.answer(f"No new releases for {artist_id}")
 
     await message.answer(f"Done")
 
@@ -93,55 +100,8 @@ async def remove_tracking(message: Message) -> None:
         return
     
     artist_ids = message.text.split(" ")[1:]
-    remove_from_trackfile(message.from_user.id, artist_ids)
+    file_handler.remove_artists(message.from_user.id, artist_ids)
     await message.answer(f"No longer tracking {', '.join(artist_ids)}!")
-
-
-## Helpers
-
-### TODO: implement x.x
-
-@sleep_and_retry
-@limits(calls=1, period=1.1)
-def mbdb_get(req_string):
-    return requests.get(req_string)
-
-def get_releases_since(artist_id: str, date: str) -> list[str] | bool:
-    req_string = f"https://musicbrainz.org/ws/2/release?fmt=json&query=arid:{artist_id}%20AND%20date:[{date}%20TO%20*]"
-    r = mbdb_get(req_string)
-    if r.status_code != 200:
-        log(logging.ERROR, f"Error returned: {r.status_code}: {r.text}")
-        return False
-    print(r.status_code)
-    print(f"{r.text}")
-    return True
-
-def add_to_trackfile(uid: int, artist_ids: list[str]):
-    filepath = f"tracks/{uid}.json"
-    if os.path.isfile(filepath):
-        with open(filepath, 'r') as f:
-            tracking: dict = json.load(f)
-    else:
-        tracking = {}
-    for artist_id in artist_ids:
-        tracking[artist_id] = date.today().strftime('%Y-%m-%d')
-    with open(filepath, 'w') as f:
-        json.dump(tracking, f)
-
-def remove_from_trackfile(uid: int, artist_ids: list[str]):
-    filepath = f"tracks/{uid}.json"
-    if os.path.isfile(filepath):
-        with open(filepath, 'r') as f:
-            tracking: dict = json.load(f)
-            
-        for artist_id in artist_ids:
-            if artist_id in tracking.keys():
-                del tracking[artist_id]
-
-        with open(filepath, 'w') as f:
-            json.dump(tracking, f)
-    else:
-        log(logging.INFO, "Attempted to remove artist from empty trackfile")
 
 
 async def main() -> None:
