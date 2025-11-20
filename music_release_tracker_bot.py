@@ -114,10 +114,10 @@ async def remove_tracking(message: Message) -> None:
     file_handler.remove_artists(message.from_user.id, artist_ids)
     await message.answer(f"No longer tracking {', '.join(artist_ids)}!")
 
-@dp.message(Command("setdate"))
+@dp.message(Command("removeall"))
 async def setdate(message: Message) -> None:
-    if not message.from_user.id in ADMINLIST:
-        log(logging.INFO, f"Nonadmin {message.from_user.id} tried to access protected command 'setdate'")
+    if not message.from_user.id in ALLOWLIST:
+        log(logging.INFO, f"Message from blocked user {message.from_user.id}")
         return
     _, artist, newdate = message.text.split(" ")
     file_handler.update_last_date(message.from_user.id, artist, newdate)
@@ -125,8 +125,8 @@ async def setdate(message: Message) -> None:
 
 @dp.message(Command("setdate"))
 async def setdate(message: Message) -> None:
-    if not message.from_user.id in ALLOWLIST:
-        log(logging.INFO, f"Message from blocked user {message.from_user.id}")
+    if not message.from_user.id in ADMINLIST:
+        log(logging.INFO, f"Nonadmin {message.from_user.id} tried to access protected command 'setdate'")
         return
     _, artist, newdate = message.text.split(" ")
     file_handler.update_last_date(message.from_user.id, artist, newdate)
