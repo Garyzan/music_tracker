@@ -33,7 +33,7 @@ def remove_artists(uid: int, artist_ids: list[str]) -> None:
             with open(filepath, 'w') as f:
                 json.dump(tracking, f)
 
-def remove_all_artists(uid: int, artist_ids: list[str]) -> None:
+def remove_all_artists(uid: int) -> None:
     filepath = f"tracks/{uid}.json"
     if os.path.isfile(filepath):
             os.remove(filepath)

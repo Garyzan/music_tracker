@@ -119,8 +119,8 @@ async def setdate(message: Message) -> None:
     if not message.from_user.id in ALLOWLIST:
         log(logging.INFO, f"Message from blocked user {message.from_user.id}")
         return
-    _, artist, newdate = message.text.split(" ")
-    file_handler.update_last_date(message.from_user.id, artist, newdate)
+    
+    file_handler.remove_all_artists(message.from_user.id)
     await message.answer(f"Done")
 
 @dp.message(Command("setdate"))
