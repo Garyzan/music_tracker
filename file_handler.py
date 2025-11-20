@@ -12,7 +12,8 @@ def add_artists(uid: int, artist_ids: list[str]) -> None:
     else:
         tracking = {}
     for artist_id in artist_ids:
-        tracking[artist_id] = date.today().strftime('%Y-%m-%d')
+        if not artist_id in tracking.keys():
+            tracking[artist_id] = date.today().strftime('%Y-%m-%d')
     with open(filepath, 'w') as f:
         json.dump(tracking, f)
 

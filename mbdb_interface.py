@@ -15,4 +15,4 @@ def get_artist_name(artist_id: str) -> str:
     resp = mbdb_get(req_string)
     if resp.status_code != 200:
         return ""
-    return resp.json().name
+    return resp.json()['name']

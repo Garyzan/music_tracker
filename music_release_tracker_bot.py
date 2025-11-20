@@ -83,7 +83,7 @@ async def refresh(message: Message) -> None:
         else:
             file_handler.update_last_date(message.from_user.id, artist_id)
             resp_j = resp.json()
-            if resp_j.count == 0:
+            if resp_j['count'] == 0:
                 await message.answer(f"No new releases for {artist_id}")
 
     await message.answer(f"Done")
