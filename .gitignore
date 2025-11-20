@@ -1,3 +1,4 @@
 .env
 tracks
 .vscode
+__pycache__
