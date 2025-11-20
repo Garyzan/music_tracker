@@ -5,6 +5,7 @@ __pycache__
 # private files
 .env
 tracks
+id_to_names.json
 
 # user lists
 allowlist

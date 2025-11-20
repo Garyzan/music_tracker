@@ -1,8 +1,13 @@
 import json
 import os
 
+import mbdb_interface
+
 from datetime import date
 
+ID_TO_NAMES = {}
+with open("id_to_names.json", "r") as f:
+    ID_TO_NAMES = json.load(f)
 
 def add_artists(uid: int, artist_ids: list[str]) -> None:
     filepath = f"tracks/{uid}.json"
@@ -64,3 +69,10 @@ def update_last_date(uid: str, artist_id: str, new_date: str = None) -> None:
             with open(filepath, 'w') as f:
                 tracking[artist_id] = new_date
                 json.dump(tracking, f)
+
+def get_name(artist_id: str) -> str:
+    if not artist_id in ID_TO_NAMES.keys():
+        ID_TO_NAMES[artist_id] = mbdb_interface.get_artist_name(artist_id)
+        with open("id_to_names.json", "w") as f:
+            json.dump(ID_TO_NAMES, f)
+    return ID_TO_NAMES[artist_id]

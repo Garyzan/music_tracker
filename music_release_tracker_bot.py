@@ -68,7 +68,8 @@ async def add_tracking(message: Message) -> None:
     
     artist_ids = message.text.split(" ")[1:]
     file_handler.add_artists(message.from_user.id, artist_ids)
-    await message.answer(f"Tracking {', '.join(artist_ids)}!")
+    artist_names = [file_handler.get_name(aid) for aid in artist_ids]
+    await message.answer(f"Tracking {', '.join(artist_names)}!")
 
 @dp.message(Command("refresh"))
 async def refresh(message: Message) -> None:
@@ -92,10 +93,11 @@ async def refresh(message: Message) -> None:
         else:
             file_handler.update_last_date(message.from_user.id, artist_id)
             resp_j = resp.json()
+            artist_name = file_handler.get_name(artist_id)
             if resp_j['count'] == 0:
-                await message.answer(f"No new releases for {artist_id}")
+                await message.answer(f"No new releases for {artist_name}")
             else:
-                await message.answer(f"{resp_j['count']} new release(s) for {artist_id}")
+                await message.answer(f"{resp_j['count']} new release(s) for {artist_name}")
 
     await message.answer(f"Done")
 
@@ -112,7 +114,8 @@ async def remove_tracking(message: Message) -> None:
     
     artist_ids = message.text.split(" ")[1:]
     file_handler.remove_artists(message.from_user.id, artist_ids)
-    await message.answer(f"No longer tracking {', '.join(artist_ids)}!")
+    artist_names = [file_handler.get_name(aid) for aid in artist_ids]
+    await message.answer(f"No longer tracking {', '.join(artist_names)}!")
 
 @dp.message(Command("removeall"))
 async def setdate(message: Message) -> None:
